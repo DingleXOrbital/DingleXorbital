@@ -24,11 +24,12 @@ public class RegistrationService extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 		Log.v("start service", "onhandleintent");
 		InstanceID instanceID = InstanceID.getInstance(this);
+		String iid = null;
 		try {
-			String iid = InstanceID.getInstance(getBaseContext()).getId();
+			iid = InstanceID.getInstance(getBaseContext()).getId();
 			instance_id = instanceID.getToken(ApplicationConstants.Google_Proj_Number,
 					GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-			Log.v("instance_id", instance_id);
+			Log.v("iid", iid);
 			String email = intent.getStringExtra("email");
 			String password = intent.getStringExtra("password");
 			final String credentials = email + ":" + password;
@@ -39,6 +40,7 @@ public class RegistrationService extends IntentService {
 		
 		Intent broadcastIntent = new Intent("com.example.proxy.intent.action.PROCESS_RESPONSE");
         broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+        Log.v("regisservice_instanceid", instance_id);
         broadcastIntent.putExtra("instance_id", instance_id);
         sendBroadcast(broadcastIntent);
         Log.v("broadcast", "Sent");

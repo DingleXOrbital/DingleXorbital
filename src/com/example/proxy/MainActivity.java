@@ -61,8 +61,6 @@ public class MainActivity extends Activity {
 		passWord.setTypeface(type);
 		Button button = (Button) findViewById(R.id.button1);
 		button.setTypeface(type);
-		instance_id = InstanceID.getInstance(getApplicationContext()).getId();
-		Log.v("instance id", instance_id);
 
 		SharedPreferences prefs = getSharedPreferences("UserDetails", Context.MODE_PRIVATE);
 		String registrationId = prefs.getString(REG_ID, "");
@@ -111,6 +109,9 @@ public class MainActivity extends Activity {
 					}
 					regId = gcmObj.register(ApplicationConstants.Google_Proj_Number);
 					msg = "Registration ID :" + regId;
+					instance_id = InstanceID.getInstance(getApplicationContext()).getId();
+					Log.v("instance id", instance_id);
+					//regId = instance_id;//////////
 				} catch (IOException ex) {
 					msg = "Error :" + ex.getMessage();
 				}

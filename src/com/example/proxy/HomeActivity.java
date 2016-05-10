@@ -1,6 +1,7 @@
 package com.example.proxy;
 
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
@@ -14,6 +15,9 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.android.gms.iid.InstanceID;
+
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -24,7 +28,6 @@ import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.Settings.Secure;
 import android.telephony.SmsManager;
 import android.util.Base64;
 import android.util.Log;
@@ -45,6 +48,7 @@ public class HomeActivity extends Activity {
 	String credentials;
 	String regId;
 	int responseCode = 0;
+	String device_id;
 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -55,8 +59,16 @@ public class HomeActivity extends Activity {
 		send.setOnClickListener(listen);
 		message = (EditText) findViewById(R.id.messagecontent);
 		numbers = (EditText) findViewById(R.id.message);
-		
-		Typeface type = Typeface.createFromAsset(getAssets(),"fonts/HelveticaNeue-Regular.ttf"); 
+
+		try {
+			device_id = InstanceID.getInstance(this).getToken(ApplicationConstants.Google_Proj_Number,
+					GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		Typeface type = Typeface.createFromAsset(getAssets(), "fonts/HelveticaNeue-Regular.ttf");
 		message.setTypeface(type);
 		numbers.setTypeface(type);
 		send.setTypeface(type);
@@ -115,9 +127,6 @@ public class HomeActivity extends Activity {
 					} else {
 						Log.v("lastcall", instance_id);
 					}
-
-					String device_id = Secure.getString(getBaseContext().getContentResolver(), Secure.ANDROID_ID);
-
 					Log.v("regid", regId);
 					JSONObject a = new JSONObject();
 					a.put("registration", regId);
@@ -135,7 +144,7 @@ public class HomeActivity extends Activity {
 					Log.v("RESPONSE CODE", Integer.toString(responseCode));
 					Log.v("RESPONSE", conn.getResponseMessage());
 					conn.disconnect();
-					if(responseCode!=200){
+					if (responseCode != 200) {
 						finish();
 					}
 				} catch (Exception e) {
@@ -165,88 +174,95 @@ public class HomeActivity extends Activity {
 
 	private View.OnClickListener listen = new View.OnClickListener() {
 		public void onClick(View v) {
-			numList = numbers.getText().toString().split(" ");
-			SmsManager sms = SmsManager.getDefault();
-			String msg = message.getText().toString();
-			Log.v("GCM_Message", numbers.getText().toString());
-			if (numList.length != 0) {
-				int l = numList.length;
-				try {
-					for (int i = 0; i < l; i++) {
-						sendSMS(numList[i],msg);
-					}
-					Toast.makeText(getApplicationContext(), "Finished Sending", Toast.LENGTH_LONG).show();
-				} catch (Exception e) {
-					Toast.makeText(getApplicationContext(), "Sending Error", Toast.LENGTH_LONG).show();
-					e.printStackTrace();
-				}
-			} else {
-				Toast.makeText(getApplicationContext(), "Sending Error", Toast.LENGTH_LONG).show();
-			}
+			initSms();
 		}
 	};
-	private void sendSMS(String phoneNumber, String message)
-    {        
-        String SENT = "SMS_SENT";
-        String DELIVERED = "SMS_DELIVERED";
 
-        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0,
-            new Intent(SENT), 0);
+	private void initSms() {
+		Toast.makeText(getApplicationContext(), "Sending!", Toast.LENGTH_LONG).show();
+		try {
+			new AsyncTask<Void, Void, Void>() {
 
-        PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0,
-            new Intent(DELIVERED), 0);
+				@Override
+				protected Void doInBackground(Void... params) {
+					numList = numbers.getText().toString().split(", ");
+					String msg = message.getText().toString();
+					Log.v("GCM_Message", numbers.getText().toString());
+					if (numList.length != 0) {
+						int l = numList.length;
 
-        //---when the SMS has been sent---
-        registerReceiver(new BroadcastReceiver(){
-            @Override
-            public void onReceive(Context arg0, Intent arg1) {
-                switch (getResultCode())
-                {
-                    case Activity.RESULT_OK:
-                        Toast.makeText(getBaseContext(), "SMS sent", 
-                                Toast.LENGTH_SHORT).show();
-                        break;
-                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-                        Toast.makeText(getBaseContext(), "Generic failure", 
-                                Toast.LENGTH_SHORT).show();
-                        break;
-                    case SmsManager.RESULT_ERROR_NO_SERVICE:
-                        Toast.makeText(getBaseContext(), "No service", 
-                                Toast.LENGTH_SHORT).show();
-                        break;
-                    case SmsManager.RESULT_ERROR_NULL_PDU:
-                        Toast.makeText(getBaseContext(), "Null PDU", 
-                                Toast.LENGTH_SHORT).show();
-                        break;
-                    case SmsManager.RESULT_ERROR_RADIO_OFF:
-                        Toast.makeText(getBaseContext(), "Radio off", 
-                                Toast.LENGTH_SHORT).show();
-                        break;
-                }
-            }
-        }, new IntentFilter(SENT));
+						for (int i = 0; i < l; i++) {
+							sendSMS(numList[i], msg);
+						}
 
-        //---when the SMS has been delivered---
-        registerReceiver(new BroadcastReceiver(){
-            @Override
-            public void onReceive(Context arg0, Intent arg1) {
-                switch (getResultCode())
-                {
-                    case Activity.RESULT_OK:
-                        Toast.makeText(getBaseContext(), "SMS delivered", 
-                                Toast.LENGTH_SHORT).show();
-                        break;
-                    case Activity.RESULT_CANCELED:
-                        Toast.makeText(getBaseContext(), "SMS not delivered", 
-                                Toast.LENGTH_SHORT).show();
-                        break;                        
-                }
-            }
-        }, new IntentFilter(DELIVERED));        
+					} 
+					return null;
+				}
 
-        SmsManager sms = SmsManager.getDefault();
-        sms.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI);        
-    }
+			}.execute();
+			Toast.makeText(getApplicationContext(), "Finished sending everything!", Toast.LENGTH_LONG).show();
+		} catch (Exception e) {
+			Toast.makeText(getApplicationContext(), "Sending Error", Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}
+	}
+
+	private void sendSMS(String phoneNumber, String message) {
+		String SENT = "SMS_SENT";
+		String DELIVERED = "SMS_DELIVERED";
+		ArrayList<PendingIntent> sentPendingIntents = new ArrayList<PendingIntent>();
+		ArrayList<PendingIntent> deliveredPendingIntents = new ArrayList<PendingIntent>();
+		PendingIntent sentPI = PendingIntent.getBroadcast(this, 0, new Intent(SENT), 0);
+
+		PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0, new Intent(DELIVERED), 0);
+
+		// ---when the SMS has been sent---
+		registerReceiver(new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context arg0, Intent arg1) {
+				switch (getResultCode()) {
+				case Activity.RESULT_OK:
+//					Toast.makeText(getBaseContext(), "SMS sent", Toast.LENGTH_SHORT).show();
+					break;
+				case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+//					Toast.makeText(getBaseContext(), "Generic failure", Toast.LENGTH_SHORT).show();
+					break;
+				case SmsManager.RESULT_ERROR_NO_SERVICE:
+//					Toast.makeText(getBaseContext(), "No service", Toast.LENGTH_SHORT).show();
+					break;
+				case SmsManager.RESULT_ERROR_NULL_PDU:
+//					Toast.makeText(getBaseContext(), "Null PDU", Toast.LENGTH_SHORT).show();
+					break;
+				case SmsManager.RESULT_ERROR_RADIO_OFF:
+//					Toast.makeText(getBaseContext(), "Radio off", Toast.LENGTH_SHORT).show();
+					break;
+				}
+			}
+		}, new IntentFilter(SENT));
+
+		// ---when the SMS has been delivered---
+		registerReceiver(new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context arg0, Intent arg1) {
+				switch (getResultCode()) {
+				case Activity.RESULT_OK:
+//					Toast.makeText(getBaseContext(), "SMS delivered", Toast.LENGTH_SHORT).show();
+					break;
+				case Activity.RESULT_CANCELED:
+//					Toast.makeText(getBaseContext(), "SMS not delivered", Toast.LENGTH_SHORT).show();
+					break;
+				}
+			}
+		}, new IntentFilter(DELIVERED));
+
+		SmsManager sms = SmsManager.getDefault();
+		ArrayList<String> parts = sms.divideMessage(message);
+		for (int i = 0; i < parts.size(); i++) {
+			sentPendingIntents.add(sentPI);
+			deliveredPendingIntents.add(deliveredPI);
+		}
+		sms.sendMultipartTextMessage(phoneNumber, null, parts, sentPendingIntents, deliveredPendingIntents);
+	}
 
 	@Override
 	protected void onStop() {
