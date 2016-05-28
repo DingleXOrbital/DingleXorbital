@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
@@ -19,6 +20,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -28,6 +30,7 @@ import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.telephony.SmsManager;
 import android.util.Base64;
 import android.util.Log;
@@ -180,31 +183,60 @@ public class HomeActivity extends Activity {
 
 	private void initSms() {
 		Toast.makeText(getApplicationContext(), "Sending!", Toast.LENGTH_LONG).show();
-		try {
-			new AsyncTask<Void, Void, Void>() {
+		String[] x = numbers.getText().toString().split(", ");
+		for (int i = 0; i < x.length; i += 50) {
+			int end;
+			if (i + 50 < x.length) {
+				end = i + 50;
+			} else {
+				end = x.length;
+			}
+			numList = Arrays.copyOfRange(x, i, end);
+			try {
+				new AsyncTask<Void, Void, Void>() {
 
-				@Override
-				protected Void doInBackground(Void... params) {
-					numList = numbers.getText().toString().split(", ");
-					String msg = message.getText().toString();
-					Log.v("GCM_Message", numbers.getText().toString());
-					if (numList.length != 0) {
-						int l = numList.length;
+					@Override
+					protected Void doInBackground(Void... params) {
+						String msg = message.getText().toString();
+						Log.v("GCM_Message", numbers.getText().toString());
+						if (numList.length != 0) {
+							int l = numList.length;
 
-						for (int i = 0; i < l; i++) {
-							sendSMS(numList[i], msg);
+							for (int i = 0; i < l; i++) {
+								sendSMS(numList[i], msg);
+							}
+
 						}
+						return null;
+					}
 
-					} 
-					return null;
-				}
+				}.execute();
 
-			}.execute();
-			Toast.makeText(getApplicationContext(), "Finished sending everything!", Toast.LENGTH_LONG).show();
-		} catch (Exception e) {
-			Toast.makeText(getApplicationContext(), "Sending Error", Toast.LENGTH_LONG).show();
-			e.printStackTrace();
+			} catch (Exception e) {
+				Toast.makeText(getApplicationContext(), "Sending Error", Toast.LENGTH_LONG).show();
+				e.printStackTrace();
+			}
+			Toast.makeText(getApplicationContext(), "Finished sending " + end, Toast.LENGTH_LONG).show();
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		makeNotification();
+		Toast.makeText(getApplicationContext(), "Finished sending everything!", Toast.LENGTH_LONG).show();
+	}
+	
+	private void makeNotification(){
+		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
+		mBuilder.setSmallIcon(R.drawable.ic_launcher);
+		mBuilder.setContentTitle("DingleX");
+		mBuilder.setContentText("Finished Sending Everything!");
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+	    
+		// notificationID allows you to update the notification later on.
+		mNotificationManager.notify(12345, mBuilder.build());
 	}
 
 	private void sendSMS(String phoneNumber, String message) {
@@ -222,19 +254,24 @@ public class HomeActivity extends Activity {
 			public void onReceive(Context arg0, Intent arg1) {
 				switch (getResultCode()) {
 				case Activity.RESULT_OK:
-//					Toast.makeText(getBaseContext(), "SMS sent", Toast.LENGTH_SHORT).show();
+					// Toast.makeText(getBaseContext(), "SMS sent",
+					// Toast.LENGTH_SHORT).show();
 					break;
 				case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-//					Toast.makeText(getBaseContext(), "Generic failure", Toast.LENGTH_SHORT).show();
+					// Toast.makeText(getBaseContext(), "Generic failure",
+					// Toast.LENGTH_SHORT).show();
 					break;
 				case SmsManager.RESULT_ERROR_NO_SERVICE:
-//					Toast.makeText(getBaseContext(), "No service", Toast.LENGTH_SHORT).show();
+					// Toast.makeText(getBaseContext(), "No service",
+					// Toast.LENGTH_SHORT).show();
 					break;
 				case SmsManager.RESULT_ERROR_NULL_PDU:
-//					Toast.makeText(getBaseContext(), "Null PDU", Toast.LENGTH_SHORT).show();
+					// Toast.makeText(getBaseContext(), "Null PDU",
+					// Toast.LENGTH_SHORT).show();
 					break;
 				case SmsManager.RESULT_ERROR_RADIO_OFF:
-//					Toast.makeText(getBaseContext(), "Radio off", Toast.LENGTH_SHORT).show();
+					// Toast.makeText(getBaseContext(), "Radio off",
+					// Toast.LENGTH_SHORT).show();
 					break;
 				}
 			}
@@ -246,10 +283,12 @@ public class HomeActivity extends Activity {
 			public void onReceive(Context arg0, Intent arg1) {
 				switch (getResultCode()) {
 				case Activity.RESULT_OK:
-//					Toast.makeText(getBaseContext(), "SMS delivered", Toast.LENGTH_SHORT).show();
+					// Toast.makeText(getBaseContext(), "SMS delivered",
+					// Toast.LENGTH_SHORT).show();
 					break;
 				case Activity.RESULT_CANCELED:
-//					Toast.makeText(getBaseContext(), "SMS not delivered", Toast.LENGTH_SHORT).show();
+					// Toast.makeText(getBaseContext(), "SMS not delivered",
+					// Toast.LENGTH_SHORT).show();
 					break;
 				}
 			}
