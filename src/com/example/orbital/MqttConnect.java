@@ -12,13 +12,14 @@ import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 public class MqttConnect {
 
 	MqttAndroidClient client;
 	final String subscribe = "orbital";
 
-	public void Connect(final String topic, final String msg, Context context) {
+	public void Connect(final String topic, final String msg, final Context context) {
 		try {
 			MqttConnectOptions option = new MqttConnectOptions();
 			option.setUserName("iliuurbi");
@@ -31,6 +32,7 @@ public class MqttConnect {
 						@Override
 						public void messageArrived(String arg0, MqttMessage arg1) throws Exception {
 							Log.i("Message Arrived", arg1.toString());
+							//Toast.makeText(context, arg1.toString(), Toast.LENGTH_SHORT);
 						}
 
 						@Override

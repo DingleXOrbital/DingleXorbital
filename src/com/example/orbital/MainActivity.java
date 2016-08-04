@@ -17,10 +17,11 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.CompoundButton;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.Toast;
-import android.widget.ToggleButton;
+import android.widget.Button;
 
 public class MainActivity extends Activity {
 
@@ -29,21 +30,16 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		ToggleButton serviceButton = (ToggleButton) findViewById(R.id.ServiceButton);
-		if(isMyServiceRunning("com.example.orbital.MqttService")){
-			serviceButton.setChecked(true);
-		}
-		serviceButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-		    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-		        if (isChecked) {
-		            // The toggle is enabled
-		        	Intent serviceIntent = new Intent(MainActivity.this, MqttInitService.class);
-		        	startService(serviceIntent);
-		        } else {
-		            // The toggle is disabled
-		        	stopService(new Intent(MainActivity.this, MqttInitService.class));
-		        }
-		    }
+		Button serviceButton = (Button) findViewById(R.id.ServiceButton);
+		
+		serviceButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				Intent serviceIntent = new Intent(MainActivity.this, MqttInitService.class);
+	        	startService(serviceIntent);
+	        	Intent intent = new Intent(getBaseContext(), HomeActivity.class);
+	        	startActivity(intent);
+			}
 		});
 	}
 
