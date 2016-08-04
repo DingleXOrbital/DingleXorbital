@@ -27,4 +27,14 @@
         android:layout_marginBottom="15dp"
         android:src="@drawable/jfk" />
 
+    <EditText
+        android:id="@+id/editTextUsername"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/ServiceButton"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="56dp"
+        android:hint='Username'
+        android:ems="10" />
+
 </RelativeLayout>
